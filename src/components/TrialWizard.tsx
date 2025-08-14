@@ -18,7 +18,7 @@ export const TrialWizard: React.FC<TrialWizardProps> = ({ trial, onComplete }) =
   const currentDepartment = DEPARTMENTS[currentStepIndex];
   const currentStep = trial.steps.find(s => s.stepCode === currentDepartment.code);
   const isStepCompleted = currentStep?.validationStatus !== 'pending';
-  const canProceed = currentStepIndex === 0 || trial.steps.find(s => s.orderIndex === currentStepIndex)?.validationStatus === 'ok';
+  const canProceed = currentStepIndex === 0 || trial.steps.find(s => s.orderIndex === currentStepIndex && s.validationStatus === 'ok');
 
   useEffect(() => {
     if (currentStep) {
@@ -40,7 +40,8 @@ export const TrialWizard: React.FC<TrialWizardProps> = ({ trial, onComplete }) =
   };
 
   const handleSubmitStep = () => {
-    updateTrialStep(trial.id, currentDepartment.code, stepData, validationStatus);
+    const dataWithRemarks = { ...stepData, remarks };
+    updateTrialStep(trial.id, currentDepartment.code, dataWithRemarks, validationStatus);
     
     if (validationStatus === 'ok' && currentStepIndex < DEPARTMENTS.length - 1) {
       setCurrentStepIndex(prev => prev + 1);

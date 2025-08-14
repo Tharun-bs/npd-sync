@@ -1,6 +1,8 @@
 import React from 'react';
 import { ArrowLeft, Download, QrCode, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { Trial, DEPARTMENTS } from '../types/trial';
+import { downloadTrialPDF } from '../utils/pdfGenerator';
+import { generateTrialQRCode } from '../utils/qrGenerator';
 
 interface TrialReportProps {
   trial: Trial;
@@ -8,6 +10,13 @@ interface TrialReportProps {
 }
 
 export const TrialReport: React.FC<TrialReportProps> = ({ trial, onBack }) => {
+  const [qrCodeUrl, setQrCodeUrl] = React.useState<string>('');
+  const [showQRModal, setShowQRModal] = React.useState(false);
+
+  React.useEffect(() => {
+    generateTrialQRCode(trial).then(setQrCodeUrl).catch(console.error);
+  }, [trial]);
+
   const getStepStatus = (stepCode: string) => {
     return trial.steps.find(s => s.stepCode === stepCode);
   };
@@ -29,18 +38,15 @@ export const TrialReport: React.FC<TrialReportProps> = ({ trial, onBack }) => {
   };
 
   const generateQRCode = () => {
-    // Mock QR code generation - in real app would generate actual QR
-    const qrData = `https://npd-workflow.com/r/${trial.trialNo}`;
-    alert(`QR Code would be generated for: ${qrData}`);
+    setShowQRModal(true);
   };
 
   const downloadPDF = () => {
-    // Mock PDF generation - in real app would generate actual PDF
-    alert('PDF report would be downloaded');
+    downloadTrialPDF(trial);
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto relative">
       <div className="bg-white rounded-lg shadow-md">
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200">
@@ -262,6 +268,44 @@ export const TrialReport: React.FC<TrialReportProps> = ({ trial, onBack }) => {
           </div>
         </div>
       </div>
+
+      {/* QR Code Modal */}
+      {showQRModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold mb-4">Trial QR Code</h3>
+              {qrCodeUrl && (
+                <img 
+                  src={qrCodeUrl} 
+                  alt="Trial QR Code" 
+                  className="mx-auto mb-4 border rounded"
+                />
+              )}
+              <p className="text-sm text-gray-600 mb-4">
+                Scan this QR code to access the trial report
+              </p>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setShowQRModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                >
+                  Close
+                </button>
+                {qrCodeUrl && (
+                  <a
+                    href={qrCodeUrl}
+                    download={`Trial_${trial.trialNo}_QR.png`}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-center"
+                  >
+                    Download
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

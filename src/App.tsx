@@ -11,26 +11,33 @@ type AppState = 'dashboard' | 'create-trial' | 'trial-wizard' | 'trial-report';
 function App() {
   const [currentView, setCurrentView] = useState<AppState>('dashboard');
   const [selectedTrial, setSelectedTrial] = useState<Trial | null>(null);
-  const { getTrialById } = useTrials();
+  const { getTrialById, loadTrialDetails } = useTrials();
 
   const handleCreateTrial = () => {
     setCurrentView('create-trial');
   };
 
-  const handleTrialCreated = (trialId: string) => {
-    const trial = getTrialById(trialId);
-    if (trial) {
+  const handleTrialCreated = async (trialId: string) => {
+    try {
+      const trial = await loadTrialDetails(trialId);
       setSelectedTrial(trial);
       setCurrentView('trial-wizard');
+    } catch (error) {
+      console.error('Error loading trial details:', error);
     }
   };
 
-  const handleViewTrial = (trial: Trial) => {
-    setSelectedTrial(trial);
-    if (trial.status === 'completed') {
-      setCurrentView('trial-report');
-    } else {
-      setCurrentView('trial-wizard');
+  const handleViewTrial = async (trial: Trial) => {
+    try {
+      const fullTrial = await loadTrialDetails(trial.id);
+      setSelectedTrial(fullTrial);
+      if (fullTrial.status === 'completed') {
+        setCurrentView('trial-report');
+      } else {
+        setCurrentView('trial-wizard');
+      }
+    } catch (error) {
+      console.error('Error loading trial details:', error);
     }
   };
 

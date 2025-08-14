@@ -13,7 +13,7 @@ export const TrialForm: React.FC<TrialFormProps> = ({ onBack, onTrialCreated }) 
   const [error, setError] = useState('');
   const { createTrial, getTrialByNo } = useTrials();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate unique trial number
@@ -22,8 +22,12 @@ export const TrialForm: React.FC<TrialFormProps> = ({ onBack, onTrialCreated }) 
       return;
     }
 
-    const trial = createTrial(trialNo, partName);
-    onTrialCreated(trial.id);
+    try {
+      const trial = await createTrial(trialNo, partName);
+      onTrialCreated(trial.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create trial');
+    }
   };
 
   return (
